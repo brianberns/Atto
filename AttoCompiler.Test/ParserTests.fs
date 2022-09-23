@@ -11,12 +11,38 @@ type ParserTests() =
 
         let input =
             """
-    fn f n is
-        if = n 0
-            1
-            * n f - n 1
-            """.Trim()
+            fn f n is
+                if = n 0
+                    1
+                    * n f - n 1
+            """
+
+        let expected =
+            let f = Identifier "f"
+            let n = Identifier "n"
+            {
+                Name = f
+                Args = [ n ]
+                Expr =
+                    If (
+                        Equal (
+                            Name n,
+                            Literal (Num 0.0)),
+                        Literal (Num 1.0),
+                        Operation (
+                            Multiplication,
+                            Name n,
+                            Call (
+                                f,
+                                [|
+                                    Operation (
+                                        Subtraction,
+                                        Name n,
+                                        Literal (Num 1.0))
+                                |])))
+            }
 
         match runParserOnString Program.parse Map.empty "" input with
-            | Success (result, _, _) -> printfn "%A" result
-            | Failure (message, _, _) -> printfn "%s" message
+            | Success (result, _, _) ->
+                Assert.AreEqual<_>(expected, result)
+            | Failure (message, _, _) -> Assert.Fail(message)
