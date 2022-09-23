@@ -2,11 +2,17 @@
 
 open FParsec
 
+type Operator =
+    | Add
+    | Subtract
+    | Multiply
+
 type Expr =
     | If of pred : Expr * ifTrue : Expr * ifFalse : Expr
     | Equal of Expr * Expr
     | Name of string
     | Number of int
+    | Operation of Operator * Expr * Expr
 
 type Function =
     {
@@ -42,7 +48,8 @@ module Parse =
             parseIdentifier
             (skipToken "is")
 
-    let parseExpr, parseExprRef = createParserForwardedToRef ()
+    let parseExpr, parseExprRef =
+        createParserForwardedToRef ()
 
     let parseIf =
         pipe4
@@ -66,8 +73,23 @@ module Parse =
 
     let parseNumber =
         pint32
-            .>> spaces
             |>> Number
+            .>> spaces
+
+    let parseOperator =
+        choice [
+            skipChar '+' >>% Add
+            skipChar '-' >>% Subtract
+            skipChar '*' >>% Multiply
+        ] .>> spaces
+
+    let parseOperation =
+        pipe3
+            parseOperator
+            parseExpr
+            parseExpr
+            (fun op left right ->
+                Operation (op, left, right))
 
     let parseExprImpl =
         choice [
@@ -75,6 +97,7 @@ module Parse =
             parseEqual
             parseName
             parseNumber
+            parseOperation
         ]
 
     let parseFunction =
