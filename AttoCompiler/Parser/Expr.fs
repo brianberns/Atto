@@ -2,6 +2,12 @@
 
 open FParsec
 
+module Reserved =
+
+    let skip str =
+        skipString str
+            .>> spaces
+
 type Expr =
     | If of pred : Expr * ifTrue : Expr * ifFalse : Expr
     | Equal of Expr * Expr
@@ -10,50 +16,34 @@ type Expr =
     | Operation of Operator * Expr * Expr
     | Call of fnName : Identifier * Expr[]
 
-type Function =
-    {
-        Name : Identifier
-        Args : List<Identifier>
-        Expr : Expr
-    }
+module Expr =
 
-module Parse =
-
-    let skipToken str =
-        skipString str
-            .>> spaces
-
-    let parseArgs =
-        manyTill
-            Identifier.parse
-            (skipToken "is")
-
-    let parseExpr, parseExprRef =
+    let private parseExpr, parseExprRef =
         createParserForwardedToRef ()
 
-    let parseIf =
+    let private parseIf =
         pipe4
-            (skipToken "if")
+            (Reserved.skip "if")
             parseExpr
             parseExpr
             parseExpr
             (fun _ pred ifTrue ifFalse ->
                 If (pred, ifTrue, ifFalse))
 
-    let parseEqual =
+    let private parseEqual =
         pipe3
-            (skipToken "=")
+            (Reserved.skip "=")
             parseExpr
             parseExpr
             (fun _ left right ->
                 Equal (left, right))
 
-    let parseLiteral =
+    let private parseLiteral =
         Literal.parse
             |>> Literal
             .>> spaces
 
-    let parseName =
+    let private parseName =
         parse {
             let! name = Identifier.parse
             let! map = getUserState
@@ -65,11 +55,11 @@ module Parse =
                     return Name name
         }
 
-    let parseOperator =
+    let private parseOperator =
         Operator.parse
             .>> spaces
 
-    let parseOperation =
+    let private parseOperation =
         pipe3
             parseOperator
             parseExpr
@@ -77,7 +67,7 @@ module Parse =
             (fun op left right ->
                 Operation (op, left, right))
 
-    let parseExprImpl =
+    let private parseExprImpl =
         choice [
             parseIf
             parseEqual
@@ -86,25 +76,6 @@ module Parse =
             parseOperation
         ]
 
-    let parseFunction =
-        parse {
-            do! skipToken "fn"
-            let! name = Identifier.parse
-            let! args = parseArgs
-            do! updateUserState (Map.add name args.Length)
-            let! expr = parseExpr
-            do! spaces
-            return {
-                Name = name
-                Args = args
-                Expr = expr
-            }
-        }
-
-    let parseProgram =
-        spaces
-            >>. parseFunction
-            .>> spaces
-            .>> eof
+    let parse = parseExpr
 
     do parseExprRef := parseExprImpl

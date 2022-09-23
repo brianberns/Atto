@@ -10,7 +10,9 @@
     <Compile Include="Parser\Operator.fs" />
     <Compile Include="Parser\Identifier.fs" />
     <Compile Include="Parser\Expr.fs" />
-    <Compile Include="Program.fs" />
+    <Compile Include="Parser\Function.fs" />
+    <Compile Include="Parser\Program.fs" />
+    <Compile Include="Main.fs" />
   </ItemGroup>
 
   <ItemGroup>

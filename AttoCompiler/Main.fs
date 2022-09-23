@@ -2,7 +2,7 @@
 
 open FParsec
 
-module Program =
+module Main =
 
     let input =
         """
@@ -12,6 +12,6 @@ fn f n is
         * n f - n 1
         """.Trim()
 
-    match runParserOnString Parse.parseProgram Map.empty "" input with
+    match runParserOnString Program.parse Map.empty "" input with
         | Success (result, _, _) -> printfn "%A" result
         | Failure (message, _, _) -> printfn "%s" message

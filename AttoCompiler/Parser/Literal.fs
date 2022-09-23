@@ -3,7 +3,11 @@
 open FParsec
 
 type Literal =
+
+    /// E.g. 123.45.
     | Num of float
+
+    /// E.g. "my string".
     | Str of string
 
 module Literal =

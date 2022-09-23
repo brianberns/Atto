@@ -10,8 +10,12 @@ type Operator =
 module Operator =
 
     let parse<'s> : Parser<_, 's> =
-        choice [
-            skipChar '+' >>% Addition
-            skipChar '-' >>% Subtraction
-            skipChar '*' >>% Multiplication
-        ]
+        seq {
+            '+', Addition
+            '-', Subtraction
+            '*', Multiplication
+        }
+            |> Seq.map (fun (c, op) ->
+                skipChar c >>% op)
+            |> Seq.toList
+            |> choice
