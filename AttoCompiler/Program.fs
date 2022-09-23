@@ -13,6 +13,7 @@ type Expr =
     | Name of string
     | Number of int
     | Operation of Operator * Expr * Expr
+    | Call of fnName : string * Expr[]
 
 type Function =
     {
@@ -29,7 +30,8 @@ module Debug =
         fun stream ->
             printfn "%A: Entering %s" stream.Position label
             let reply = p stream
-            printfn "%A: Leaving %s (%A)" stream.Position label reply.Status
+            let sResult = string reply.Result
+            printfn "%A: Leaving %s (%A): %s" stream.Position label reply.Status sResult
             reply
 #endif
 
@@ -69,7 +71,16 @@ module Parse =
                 Equal (left, right))
 
     let parseName =
-        parseIdentifier |>> Name
+        parse {
+            let! name = parseIdentifier
+            let! map = getUserState
+            match map |> Map.tryFind name with
+                | Some nArgs ->
+                    let! exprs = parray nArgs parseExpr
+                    return Call (name, exprs)
+                | None ->
+                    return Name name
+        }
 
     let parseNumber =
         pint32
@@ -101,18 +112,19 @@ module Parse =
         ]
 
     let parseFunction =
-        pipe4
-            (skipToken "fn")
-            parseIdentifier
-            parseArgs
-            parseExpr
-            (fun _ name args expr ->
-                {
-                    Name = name
-                    Args = args
-                    Expr = expr
-                })
-            .>> spaces
+        parse {
+            do! skipToken "fn"
+            let! name = parseIdentifier
+            let! args = parseArgs
+            do! updateUserState (Map.add name args.Length)
+            let! expr = parseExpr
+            do! spaces
+            return {
+                Name = name
+                Args = args
+                Expr = expr
+            }
+        }
 
     let parseProgram =
         spaces
@@ -133,6 +145,6 @@ fn f n is
         * n f - n 1
         """.Trim()
 
-    match runParserOnString Parse.parseProgram () "" input with
+    match runParserOnString Parse.parseProgram Map.empty "" input with
         | Success (result, _, _) -> printfn "%A" result
         | Failure (message, _, _) -> printfn "%s" message
