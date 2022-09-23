@@ -1,4 +1,4 @@
-﻿namespace Atto.Parser
+namespace Atto
 
 module Main =
 
