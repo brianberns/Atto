@@ -9,34 +9,17 @@ module Reserved =
             .>> spaces
 
 type Expr =
-    | If of pred : Expr * ifTrue : Expr * ifFalse : Expr
-    | Equal of Expr * Expr
     | Literal of Literal
     | Name of Identifier
-    | Operation of Operator * Expr * Expr
     | Call of fnName : Identifier * Expr[]
+    | Equal of Expr * Expr
+    | Operation of Operator * Expr * Expr
+    | If of pred : Expr * ifTrue : Expr * ifFalse : Expr
 
 module Expr =
 
     let private parseExpr, parseExprRef =
         createParserForwardedToRef ()
-
-    let private parseIf =
-        pipe4
-            (Reserved.skip "if")
-            parseExpr
-            parseExpr
-            parseExpr
-            (fun _ pred ifTrue ifFalse ->
-                If (pred, ifTrue, ifFalse))
-
-    let private parseEqual =
-        pipe3
-            (Reserved.skip "=")
-            parseExpr
-            parseExpr
-            (fun _ left right ->
-                Equal (left, right))
 
     let private parseLiteral =
         Literal.parse
@@ -55,6 +38,14 @@ module Expr =
                     return Name name
         }
 
+    let private parseEqual =
+        pipe3
+            (Reserved.skip "=")
+            parseExpr
+            parseExpr
+            (fun _ left right ->
+                Equal (left, right))
+
     let private parseOperator =
         Operator.parse
             .>> spaces
@@ -66,6 +57,15 @@ module Expr =
             parseExpr
             (fun op left right ->
                 Operation (op, left, right))
+
+    let private parseIf =
+        pipe4
+            (Reserved.skip "if")
+            parseExpr
+            parseExpr
+            parseExpr
+            (fun _ pred ifTrue ifFalse ->
+                If (pred, ifTrue, ifFalse))
 
     let private parseExprImpl =
         choice [

@@ -11,36 +11,38 @@ type ParserTests() =
 
         let input =
             """
-            fn f n is
+            fn fib n is
                 if = n 0
                     1
-                    * n f - n 1
+                    * n fib - n 1
             """
 
         let expected =
-            let f = Identifier "f"
+            let fib = Identifier "fib"
             let n = Identifier "n"
-            {
-                Name = f
-                Args = [ n ]
-                Expr =
-                    If (
-                        Equal (
-                            Name n,
-                            Literal (Num 0.0)),
-                        Literal (Num 1.0),
-                        Operation (
-                            Multiplication,
-                            Name n,
-                            Call (
-                                f,
-                                [|
-                                    Operation (
-                                        Subtraction,
-                                        Name n,
-                                        Literal (Num 1.0))
-                                |])))
-            }
+            let fn =
+                {
+                    Name = fib
+                    Args = [ n ]
+                    Expr =
+                        If (
+                            Equal (
+                                Name n,
+                                Literal (Num 0.0)),
+                            Literal (Num 1.0),
+                            Operation (
+                                Multiplication,
+                                Name n,
+                                Call (
+                                    fib,
+                                    [|
+                                        Operation (
+                                            Subtraction,
+                                            Name n,
+                                            Literal (Num 1.0))
+                                    |])))
+                }
+            Map [ fn.Name, fn ]
 
         match runParserOnString Program.parse Map.empty "" input with
             | Success (result, _, _) ->
