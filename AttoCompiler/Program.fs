@@ -2,16 +2,49 @@
 
 open FParsec
 
+type Literal =
+    | Num of float
+    | Str of string
+
+module Literal =
+
+    let parseString =
+        between
+            (pchar '"')
+            (pchar '"')
+            (manySatisfy ((<) '"'))
+
+    let parse =
+        choice [
+            parseString |>> Str
+            pfloat |>> Num
+        ]
+
 type Operator =
-    | Add
-    | Subtract
-    | Multiply
+    | Addition
+    | Subtraction
+    | Multiplication
+
+module Operator =
+
+    let parse =
+        choice [
+            skipChar '+' >>% Addition
+            skipChar '-' >>% Subtraction
+            skipChar '*' >>% Multiplication
+        ]
+
+module Identifier =
+
+    let parse =
+        identifier (IdentifierOptions())
+            .>> spaces
 
 type Expr =
     | If of pred : Expr * ifTrue : Expr * ifFalse : Expr
     | Equal of Expr * Expr
+    | Literal of Literal
     | Name of string
-    | Number of int
     | Operation of Operator * Expr * Expr
     | Call of fnName : string * Expr[]
 
@@ -41,13 +74,9 @@ module Parse =
         skipString str
             .>> spaces
 
-    let parseIdentifier =
-        identifier (IdentifierOptions())
-            .>> spaces
-
     let parseArgs =
         manyTill
-            parseIdentifier
+            Identifier.parse
             (skipToken "is")
 
     let parseExpr, parseExprRef =
@@ -70,9 +99,14 @@ module Parse =
             (fun _ left right ->
                 Equal (left, right))
 
+    let parseLiteral =
+        Literal.parse
+            |>> Literal
+            .>> spaces
+
     let parseName =
         parse {
-            let! name = parseIdentifier
+            let! name = Identifier.parse
             let! map = getUserState
             match map |> Map.tryFind name with
                 | Some nArgs ->
@@ -82,17 +116,9 @@ module Parse =
                     return Name name
         }
 
-    let parseNumber =
-        pint32
-            |>> Number
-            .>> spaces
-
     let parseOperator =
-        choice [
-            skipChar '+' >>% Add
-            skipChar '-' >>% Subtract
-            skipChar '*' >>% Multiply
-        ] .>> spaces
+        Operator.parse
+            .>> spaces
 
     let parseOperation =
         pipe3
@@ -106,15 +132,15 @@ module Parse =
         choice [
             parseIf
             parseEqual
+            parseLiteral
             parseName
-            parseNumber
             parseOperation
         ]
 
     let parseFunction =
         parse {
             do! skipToken "fn"
-            let! name = parseIdentifier
+            let! name = Identifier.parse
             let! args = parseArgs
             do! updateUserState (Map.add name args.Length)
             let! expr = parseExpr
@@ -132,8 +158,7 @@ module Parse =
             .>> spaces
             .>> eof
 
-    do
-        parseExprRef := parseExprImpl
+    do parseExprRef := parseExprImpl
 
 module Program =
 
