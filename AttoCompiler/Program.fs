@@ -4,6 +4,9 @@ open FParsec
 
 type Expr =
     | If of pred : Expr * ifTrue : Expr * ifFalse : Expr
+    | Equal of Expr * Expr
+    | Name of string
+    | Number of int
 
 type Function =
     {
@@ -26,39 +29,58 @@ module Debug =
 
 module Parse =
 
-    let skipKeyword str =
+    let skipToken str =
         skipString str
             .>> spaces
 
-    let parseName =
+    let parseIdentifier =
         identifier (IdentifierOptions())
             .>> spaces
 
     let parseArgs =
         manyTill
-            parseName
-            (skipKeyword "is")
+            parseIdentifier
+            (skipToken "is")
 
     let parseExpr, parseExprRef = createParserForwardedToRef ()
 
     let parseIf =
         pipe4
-            (skipKeyword "if")
+            (skipToken "if")
             parseExpr
             parseExpr
             parseExpr
             (fun _ pred ifTrue ifFalse ->
                 If (pred, ifTrue, ifFalse))
 
+    let parseEqual =
+        pipe3
+            (skipToken "=")
+            parseExpr
+            parseExpr
+            (fun _ left right ->
+                Equal (left, right))
+
+    let parseName =
+        parseIdentifier |>> Name
+
+    let parseNumber =
+        pint32
+            .>> spaces
+            |>> Number
+
     let parseExprImpl =
         choice [
             parseIf
+            parseEqual
+            parseName
+            parseNumber
         ]
 
     let parseFunction =
         pipe4
-            (skipKeyword "fn")
-            parseName
+            (skipToken "fn")
+            parseIdentifier
             parseArgs
             parseExpr
             (fun _ name args expr ->
