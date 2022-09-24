@@ -1,10 +1,8 @@
 ﻿namespace Atto
 
-open System
-open System.Reflection
-open System.Reflection.Emit
-open Lokad.ILPack
-
+open Microsoft.CodeAnalysis
+open Microsoft.CodeAnalysis.CSharp
+open Microsoft.CodeAnalysis.CSharp.Syntax
 open FParsec
 open Atto.Parser
 
@@ -28,30 +26,35 @@ module Main =
             | Failure (message, _, _) ->
                 failwith message
 
-    let generate assemblyName fnMap =
+    let generate (assemblyName : string) fnMap =
+        let compilationUnit = SyntaxFactory.CompilationUnit()
+        let namespaceNode =
+            SyntaxFactory.NamespaceDeclaration(
+                SyntaxFactory.IdentifierName(
+                    assemblyName))
+        let classNode = SyntaxFactory.ClassDeclaration($"{assemblyName}Type")
+        let method =
+            SyntaxFactory.MethodDeclaration(
+                SyntaxFactory.PredefinedType(
+                    SyntaxFactory.Token(
+                        SyntaxKind.VoidKeyword)),
+                "Main")
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.StaticKeyword))
+                .AddBodyStatements()
+        let classNode' = classNode.AddMembers(method)
+        let namespaceNode' = namespaceNode.AddMembers(classNode')
+        let compilationUnit' = compilationUnit.AddMembers(namespaceNode')
+        printfn "%A" <| compilationUnit'.NormalizeWhitespace()
 
-        let asmName = AssemblyName(assemblyName)
-        let asmBldr =
-            AssemblyBuilder.DefineDynamicAssembly(
-                asmName, AssemblyBuilderAccess.Run)
-        let modBldr =
-            asmBldr.DefineDynamicModule($"{assemblyName}Module")
-        let typeBldr =
-            modBldr.DefineType(
-                $"{assemblyName}Type",
-                TypeAttributes.Public)
-        let methodBldr =
-            typeBldr.DefineMethod(
-                $"{assemblyName}Method",
-                MethodAttributes.Public ||| MethodAttributes.Static)
-
-        let ilGen = methodBldr.GetILGenerator()
-        ilGen.Emit(OpCodes.Ldc_I4, 1)
-
-        let _typ = typeBldr.CreateType()
-
-        let asmGen = AssemblyGenerator()
-        asmGen.GenerateAssembly(asmBldr, $"{assemblyName}.exe")
+        let compilation =
+            CSharpCompilation.Create(
+                assemblyName,
+                [ compilationUnit'.SyntaxTree ],
+                [ MetadataReference.CreateFromFile(typeof<obj>.Assembly.Location) ],
+                CSharpCompilationOptions(OutputKind.ConsoleApplication))
+        let result = compilation.Emit($"{assemblyName}.exe")
+        printfn "%A" result.Diagnostics
+        assert(result.Success)
 
     [<EntryPoint>]
     let main args =
