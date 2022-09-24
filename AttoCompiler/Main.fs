@@ -47,11 +47,11 @@ module Main =
         printfn "%A" <| compilationUnit'.NormalizeWhitespace()
 
         let compilation =
-            CSharpCompilation.Create(
-                assemblyName,
-                [ compilationUnit'.SyntaxTree ],
-                [ MetadataReference.CreateFromFile(typeof<obj>.Assembly.Location) ],
-                CSharpCompilationOptions(OutputKind.ConsoleApplication))
+            CSharpCompilation
+                .Create(assemblyName)
+                .AddSyntaxTrees(compilationUnit'.SyntaxTree)
+                .AddReferences(MetadataReference.CreateFromFile(typeof<obj>.Assembly.Location))
+                .WithOptions(CSharpCompilationOptions(OutputKind.ConsoleApplication))
         let result = compilation.Emit($"{assemblyName}.exe")
         printfn "%A" result.Diagnostics
         assert(result.Success)
