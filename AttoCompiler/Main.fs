@@ -3,7 +3,7 @@
 open System
 open System.Reflection
 open System.Reflection.Emit
-open Lokad.ILPack.Metadata
+open Lokad.ILPack
 
 open FParsec
 open Atto.Parser
@@ -29,14 +29,29 @@ module Main =
                 failwith message
 
     let generate assemblyName fnMap =
-        (*
-        let domain = AppDomain.CurrentDomain
-        let name = AssemblyName(assemblyName)
-        let builder =
+
+        let asmName = AssemblyName(assemblyName)
+        let asmBldr =
             AssemblyBuilder.DefineDynamicAssembly(
-                name, AssemblyBuilderAccess.Run)
-        *)
-        printfn "%A "fnMap
+                asmName, AssemblyBuilderAccess.Run)
+        let modBldr =
+            asmBldr.DefineDynamicModule($"{assemblyName}Module")
+        let typeBldr =
+            modBldr.DefineType(
+                $"{assemblyName}Type",
+                TypeAttributes.Public)
+        let methodBldr =
+            typeBldr.DefineMethod(
+                $"{assemblyName}Method",
+                MethodAttributes.Public ||| MethodAttributes.Static)
+
+        let ilGen = methodBldr.GetILGenerator()
+        ilGen.Emit(OpCodes.Ldc_I4, 1)
+
+        let _typ = typeBldr.CreateType()
+
+        let asmGen = AssemblyGenerator()
+        asmGen.GenerateAssembly(asmBldr, $"{assemblyName}.exe")
 
     [<EntryPoint>]
     let main args =
