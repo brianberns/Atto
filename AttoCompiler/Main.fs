@@ -2,7 +2,9 @@
 
 open Microsoft.CodeAnalysis
 open Microsoft.CodeAnalysis.CSharp
-open Microsoft.CodeAnalysis.CSharp.Syntax
+
+open Basic.Reference.Assemblies
+
 open FParsec
 open Atto.Parser
 
@@ -46,17 +48,19 @@ module Main =
         let compilationUnit' = compilationUnit.AddMembers(namespaceNode')
         printfn "%A" <| compilationUnit'.NormalizeWhitespace()
 
-        let references =
-            Basic.Reference.Assemblies.Net60.All
-                |> Seq.cast<MetadataReference>
-                |> Seq.toArray
-
         let compilation =
+            let references : MetadataReference[] =
+                [|
+                    Net60.mscorlib
+                    Net60.SystemRuntime
+                |]
+            let options =
+                CSharpCompilationOptions(OutputKind.ConsoleApplication)
             CSharpCompilation
                 .Create(assemblyName)
                 .AddSyntaxTrees(compilationUnit'.SyntaxTree)
                 .AddReferences(references)
-                .WithOptions(CSharpCompilationOptions(OutputKind.ConsoleApplication))
+                .WithOptions(options)
         let result = compilation.Emit($"{assemblyName}.exe")
         printfn "%A" result.Diagnostics
         assert(result.Success)
