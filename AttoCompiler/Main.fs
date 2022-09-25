@@ -55,15 +55,21 @@ module Main =
                     Net60.SystemRuntime
                 |]
             let options =
-                CSharpCompilationOptions(OutputKind.ConsoleApplication)
+                CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
             CSharpCompilation
                 .Create(assemblyName)
                 .AddSyntaxTrees(compilationUnit'.SyntaxTree)
                 .AddReferences(references)
                 .WithOptions(options)
-        let result = compilation.Emit($"{assemblyName}.exe")
-        printfn "%A" result.Diagnostics
+        let result = compilation.Emit($"{assemblyName}.dll")
+        for diagnostic in result.Diagnostics do
+            printfn "%A" diagnostic
         assert(result.Success)
+
+        System.IO.File.Copy(
+            "App.runtimeconfig.json",
+            $"{assemblyName}.runtimeconfig.json",
+            overwrite=true)
 
     [<EntryPoint>]
     let main args =

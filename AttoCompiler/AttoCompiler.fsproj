@@ -7,6 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="App.runtimeconfig.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Compile Include="Parser\Literal.fs" />
     <Compile Include="Parser\Operator.fs" />
     <Compile Include="Parser\Identifier.fs" />
@@ -15,6 +18,8 @@
     <Compile Include="Parser\Program.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>
+
+  <ItemGroup />
 
   <ItemGroup>
     <PackageReference Include="Basic.Reference.Assemblies.Net60" Version="1.2.4" />
