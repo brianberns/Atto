@@ -46,11 +46,16 @@ module Main =
         let compilationUnit' = compilationUnit.AddMembers(namespaceNode')
         printfn "%A" <| compilationUnit'.NormalizeWhitespace()
 
+        let references =
+            Basic.Reference.Assemblies.Net60.All
+                |> Seq.cast<MetadataReference>
+                |> Seq.toArray
+
         let compilation =
             CSharpCompilation
                 .Create(assemblyName)
                 .AddSyntaxTrees(compilationUnit'.SyntaxTree)
-                .AddReferences(MetadataReference.CreateFromFile(typeof<obj>.Assembly.Location))
+                .AddReferences(references)
                 .WithOptions(CSharpCompilationOptions(OutputKind.ConsoleApplication))
         let result = compilation.Emit($"{assemblyName}.exe")
         printfn "%A" result.Diagnostics
