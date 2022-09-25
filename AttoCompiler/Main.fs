@@ -55,7 +55,8 @@ module Main =
                     Net60.SystemRuntime
                 |]
             let options =
-                CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+                CSharpCompilationOptions(OutputKind.ConsoleApplication)
+                    .WithMainTypeName($"{namespaceNode'.Name}.{classNode'.Identifier}");
             CSharpCompilation
                 .Create(assemblyName)
                 .AddSyntaxTrees(compilationUnit'.SyntaxTree)
