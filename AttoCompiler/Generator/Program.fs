@@ -1,5 +1,8 @@
 ﻿namespace Atto.Generator
 
+open System.Reflection
+open System.IO
+
 open Microsoft.CodeAnalysis
 open Microsoft.CodeAnalysis.CSharp
 open type SyntaxFactory
@@ -106,8 +109,13 @@ module Program =
                 .WithOptions(options)
         let result = compilation.Emit($"{assemblyName}.dll")
         if result.Success then
-            System.IO.File.Copy(
-                "App.runtimeconfig.json",
+            let sourcePath =
+                Path.Combine(
+                    Path.GetDirectoryName(
+                        Assembly.GetExecutingAssembly().Location),
+                    "App.runtimeconfig.json")
+            File.Copy(
+                sourcePath,
                 $"{assemblyName}.runtimeconfig.json",
                 overwrite = true)
             Array.empty
