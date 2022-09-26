@@ -44,7 +44,7 @@ module Main =
         seq {
             for i, id in Seq.indexed ids do
                 if i > 0 then comma
-                else generateParameter id
+                generateParameter id
                     |> SyntaxNodeOrToken.op_Implicit
         }
             |> SeparatedList
@@ -67,10 +67,16 @@ module Main =
                     IdentifierName(fnName.String))
                     .WithArgumentList(generateArgumentList args)
             | Equal (left, right) ->
-                BinaryExpression(
-                    SyntaxKind.EqualsExpression,
-                    generateExpr left,
-                    generateExpr right)
+                InvocationExpression(
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            IdentifierName("System"),
+                            IdentifierName("Object")),
+                        IdentifierName("Equals")))
+                    .WithArgumentList(
+                        generateArgumentList [|left; right|])
             | Operation (op, left, right) ->
                 let opKind =
                     match op with
@@ -86,9 +92,6 @@ module Main =
                     generateExpr pred,
                     generateExpr ifTrue,
                     generateExpr ifFalse)
-            | _ ->
-                LiteralExpression(
-                    SyntaxKind.NullLiteralExpression)
 
     and generateArgument expr =
         Argument(generateExpr expr)
@@ -100,7 +103,7 @@ module Main =
         seq {
             for i, expr in Seq.indexed exprs do
                 if i > 0 then comma
-                else generateArgument expr
+                generateArgument expr
                     |> SyntaxNodeOrToken.op_Implicit
         }
             |> SeparatedList
