@@ -18,8 +18,13 @@
     <Compile Include="Parser\Program.fs" />
     <Compile Include="Generator\Function.fs" />
     <Compile Include="Generator\Program.fs" />
+    <None Include="core.at">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Compile Include="Main.fs" />
   </ItemGroup>
+
+  <ItemGroup />
 
   <ItemGroup>
     <PackageReference Include="Basic.Reference.Assemblies.Net60" Version="1.2.4" />

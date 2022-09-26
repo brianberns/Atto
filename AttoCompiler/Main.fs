@@ -1,6 +1,7 @@
 ﻿namespace Atto
 
 open System.IO
+open System.Reflection
 
 module Main =
 
@@ -8,7 +9,15 @@ module Main =
     let main args =
         try
             let path = Seq.exactlyOne args
-            let input = File.ReadAllText path
+            let input =
+                let corePath =
+                    Path.Combine(
+                        Path.GetDirectoryName(
+                            Assembly.GetExecutingAssembly().Location),
+                        "core.at")
+                File.ReadAllText corePath
+                    + System.Environment.NewLine
+                    + File.ReadAllText path
             let fileName = Path.GetFileNameWithoutExtension(path)
             match Parser.Program.parse input with
                 | Choice1Of2 fns ->
