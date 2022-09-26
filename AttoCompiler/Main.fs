@@ -83,10 +83,15 @@ module Main =
                         | Addition -> SyntaxKind.AddExpression
                         | Subtraction -> SyntaxKind.SubtractExpression
                         | Multiplication -> SyntaxKind.MultiplyExpression
+                let cast node =
+                    CastExpression(
+                        PredefinedType(
+                            Token(SyntaxKind.FloatKeyword)),
+                        node)
                 BinaryExpression(
                     opKind,
-                    generateExpr left,
-                    generateExpr right)
+                    generateExpr left |> cast,
+                    generateExpr right |> cast)
             | If (pred, ifTrue, ifFalse) ->
                 ConditionalExpression(
                     generateExpr pred,
