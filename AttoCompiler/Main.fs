@@ -50,16 +50,16 @@ module Main =
             |> SeparatedList
             |> ParameterList
 
-    let rec generateExpr expr fnMap =
-        (*
+    let rec generateExpr expr fnMap : Syntax.ExpressionSyntax =
         match expr with
             | If (pred, ifTrue, ifFalse) ->
-                
-            | _ -> Block()
-        *)
-        ArrowExpressionClause(
-            LiteralExpression(
-                SyntaxKind.NullLiteralExpression))
+                ConditionalExpression(
+                    generateExpr pred fnMap,
+                    generateExpr ifTrue fnMap,
+                    generateExpr ifFalse fnMap)
+            | _ ->
+                LiteralExpression(
+                    SyntaxKind.NullLiteralExpression)
 
     let generateFunction fn fnMap =
         MethodDeclaration(
@@ -69,7 +69,9 @@ module Main =
                 Token(SyntaxKind.StaticKeyword))
             .WithParameterList(
                 generateParameterList fn.Args)
-            .WithExpressionBody(generateExpr fn.Expr fnMap)
+            .WithExpressionBody(
+                generateExpr fn.Expr fnMap
+                    |> ArrowExpressionClause)
             .WithSemicolonToken(
                 Token(SyntaxKind.SemicolonToken))
             :> Syntax.MemberDeclarationSyntax
