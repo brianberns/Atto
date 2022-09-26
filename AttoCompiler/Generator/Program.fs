@@ -63,15 +63,16 @@ module Program =
         [|
             for fn in fns do
                 Function.generate fn
+                    :> Syntax.MemberDeclarationSyntax
         |]
 
     let generate (assemblyName : string) fns =
 
         let classNode =
-            let members = generateFunctions fns
+            let methods = generateFunctions fns
             ClassDeclaration($"{assemblyName}Type")
                 .AddMembers(mainMethod, printMethod)
-                .AddMembers(items = members)
+                .AddMembers(items = methods)
 
         let namespaceNode =
             NamespaceDeclaration(

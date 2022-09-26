@@ -64,7 +64,7 @@ module Function =
                     IdentifierName("Object")),
                 IdentifierName("Equals")))
             .WithArgumentList(
-                generateArgumentList [|left; right|])
+                generateArgumentList [| left; right |])
 
     and private generateOperation op left right =
         let opKind =
@@ -115,8 +115,8 @@ module Function =
             .WithParameterList(
                 generateParameterList fn.Args)
             .WithExpressionBody(
-                generateExpr fn.Expr
+                fn.Expr
+                    |> generateExpr
                     |> ArrowExpressionClause)
             .WithSemicolonToken(
                 Token(SyntaxKind.SemicolonToken))
-            :> Syntax.MemberDeclarationSyntax
