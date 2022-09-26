@@ -1,17 +1,19 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>false</GenerateProgramFile>
+    <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="Programs\lists.at" />
-    <None Include="Programs\fib.at" />
+    <None Include="..\AttoCompiler\core.at" Link="core.at" />
     <Compile Include="ParserTests.fs" />
     <Compile Include="GeneratorTests.fs" />
+    <None Include="Programs\lists.at" />
+    <None Include="Programs\fib.at" />
     <Compile Include="Main.fs" />
   </ItemGroup>
 

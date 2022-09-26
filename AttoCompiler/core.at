@@ -1,23 +1,5 @@
-fn = x y is
-	__eq x y
-
-fn + x y is
-	__add x y
-
-fn - x y is
-	__add x __neg y
-
 fn neg x is
-	__neg x
-
-fn * x y is
-	__mul x y
-
-fn / x y is
-	__div x y
-
-fn % x y is
-	__rem x y
+	- 0 x
 
 fn ! x is
 	if = true x
@@ -39,33 +21,6 @@ fn and x y is
 			true
 		false
 	false
-
-fn head x is
-	__head x
-
-fn tail x is
-	__tail x
-
-fn fuse x y is
-	__fuse x y
-
-fn pair x y is
-	__pair x y
-
-fn litr x is
-	__litr x
-
-fn str x is
-	__str x
-
-fn words x is
-	__words x
-
-fn input x is
-	__input x
-
-fn print x is
-	__print x
 
 fn # x y is
 	head pair y x

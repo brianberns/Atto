@@ -45,3 +45,10 @@ type ParserTests() =
             | Choice1Of2 actual ->
                 Assert.AreEqual<_>(expected, actual)
             | Choice2Of2 message -> Assert.Fail(message)
+
+    [<TestMethod>]
+    member _.Core() =
+        let input = System.IO.File.ReadAllText("core.at")
+        match Program.parse input with
+            | Choice1Of2 actual -> printfn "%A" actual
+            | Choice2Of2 message -> Assert.Fail(message)
