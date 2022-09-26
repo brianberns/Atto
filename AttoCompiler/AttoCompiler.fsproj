@@ -16,10 +16,10 @@
     <Compile Include="Parser\Expr.fs" />
     <Compile Include="Parser\Function.fs" />
     <Compile Include="Parser\Program.fs" />
+    <Compile Include="Generator\Function.fs" />
+    <Compile Include="Generator\Program.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>
-
-  <ItemGroup />
 
   <ItemGroup>
     <PackageReference Include="Basic.Reference.Assemblies.Net60" Version="1.2.4" />
