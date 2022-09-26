@@ -86,7 +86,7 @@ module Main =
                 let cast node =
                     CastExpression(
                         PredefinedType(
-                            Token(SyntaxKind.FloatKeyword)),
+                            Token(SyntaxKind.DoubleKeyword)),
                         node)
                 BinaryExpression(
                     opKind,
