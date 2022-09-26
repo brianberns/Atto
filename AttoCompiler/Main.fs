@@ -29,12 +29,7 @@ module Main =
                 failwith message
 
     let generate (assemblyName : string) fnMap =
-        let compilationUnit = SyntaxFactory.CompilationUnit()
-        let namespaceNode =
-            SyntaxFactory.NamespaceDeclaration(
-                SyntaxFactory.IdentifierName(
-                    assemblyName))
-        let classNode = SyntaxFactory.ClassDeclaration($"{assemblyName}Type")
+
         let method =
             SyntaxFactory.MethodDeclaration(
                 SyntaxFactory.PredefinedType(
@@ -43,10 +38,23 @@ module Main =
                 "Main")
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.StaticKeyword))
                 .AddBodyStatements()
-        let classNode' = classNode.AddMembers(method)
-        let namespaceNode' = namespaceNode.AddMembers(classNode')
-        let compilationUnit' = compilationUnit.AddMembers(namespaceNode')
-        printfn "%A" <| compilationUnit'.NormalizeWhitespace()
+
+        let classNode =
+            SyntaxFactory
+                .ClassDeclaration($"{assemblyName}Type")
+                .AddMembers(method)
+
+        let namespaceNode =
+            SyntaxFactory
+                .NamespaceDeclaration(
+                    SyntaxFactory.IdentifierName(assemblyName))
+                .AddMembers(classNode)
+
+        let compilationUnit =
+            SyntaxFactory
+                .CompilationUnit()
+                .AddMembers(namespaceNode)
+        printfn "%A" <| compilationUnit.NormalizeWhitespace()
 
         let compilation =
             let references : MetadataReference[] =
@@ -56,10 +64,10 @@ module Main =
                 |]
             let options =
                 CSharpCompilationOptions(OutputKind.ConsoleApplication)
-                    .WithMainTypeName($"{namespaceNode'.Name}.{classNode'.Identifier}");
+                    .WithMainTypeName($"{namespaceNode.Name}.{classNode.Identifier}");
             CSharpCompilation
                 .Create(assemblyName)
-                .AddSyntaxTrees(compilationUnit'.SyntaxTree)
+                .AddSyntaxTrees(compilationUnit.SyntaxTree)
                 .AddReferences(references)
                 .WithOptions(options)
         let result = compilation.Emit($"{assemblyName}.dll")
