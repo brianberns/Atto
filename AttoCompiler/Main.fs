@@ -99,13 +99,7 @@ module Main =
                     generateExpr ifFalse)
             | Print expr ->
                 InvocationExpression(
-                    MemberAccessExpression(
-                        SyntaxKind.SimpleMemberAccessExpression,
-                        MemberAccessExpression(
-                            SyntaxKind.SimpleMemberAccessExpression,
-                            IdentifierName("System"),
-                            IdentifierName("Console")),
-                        IdentifierName("WriteLine")))
+                    IdentifierName("Print"))
                     .WithArgumentList(
                         generateArgumentList [| expr |])
 
@@ -164,11 +158,46 @@ module Main =
                     Token(SyntaxKind.StaticKeyword))
                 .AddBodyStatements(stmt)
 
+        let printMethod =
+            MethodDeclaration(
+                PredefinedType(
+                    Token(SyntaxKind.ObjectKeyword)),
+                SyntaxFactory.Identifier("Print"))
+                .WithModifiers(
+                    TokenList(
+                        Token(SyntaxKind.StaticKeyword)))
+                .WithParameterList(
+                    ParameterList(
+                        SingletonSeparatedList(
+                            Parameter(
+                                SyntaxFactory.Identifier("value"))
+                                .WithType(
+                                    PredefinedType(
+                                        Token(SyntaxKind.ObjectKeyword))))))
+                .WithBody(
+                    Block(
+                        ExpressionStatement(
+                            InvocationExpression(
+                                MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        IdentifierName("System"),
+                                        IdentifierName("Console")),
+                                    IdentifierName("WriteLine")))
+                                .WithArgumentList(
+                                    ArgumentList(
+                                        SingletonSeparatedList(
+                                            Argument(
+                                                IdentifierName("value")))))),
+                        ReturnStatement(
+                            IdentifierName("value"))))
+
         let classNode =
             let members = generateFunctions fns
             ClassDeclaration($"{assemblyName}Type")
+                .AddMembers(mainMethod, printMethod)
                 .AddMembers(items = members)
-                .AddMembers(mainMethod)
 
         let namespaceNode =
             NamespaceDeclaration(
