@@ -50,18 +50,38 @@ module Main =
             |> SeparatedList
             |> ParameterList
 
-    let rec generateExpr expr fnMap : Syntax.ExpressionSyntax =
+    let rec generateExpr expr : Syntax.ExpressionSyntax =
         match expr with
+            | Call (fnName, args) ->
+                InvocationExpression(
+                    IdentifierName(fnName.String))
+                    .WithArgumentList(generateArgumentList args)
             | If (pred, ifTrue, ifFalse) ->
                 ConditionalExpression(
-                    generateExpr pred fnMap,
-                    generateExpr ifTrue fnMap,
-                    generateExpr ifFalse fnMap)
+                    generateExpr pred,
+                    generateExpr ifTrue,
+                    generateExpr ifFalse)
             | _ ->
                 LiteralExpression(
                     SyntaxKind.NullLiteralExpression)
 
-    let generateFunction fn fnMap =
+    and generateArgument expr =
+        Argument(generateExpr expr)
+
+    and generateArgumentList exprs =
+        let comma =
+            Token(SyntaxKind.CommaToken)
+                |> SyntaxNodeOrToken.op_Implicit
+        seq {
+            for i, expr in Seq.indexed exprs do
+                if i > 0 then comma
+                else generateArgument expr
+                    |> SyntaxNodeOrToken.op_Implicit
+        }
+            |> SeparatedList
+            |> ArgumentList
+
+    let generateFunction fn =
         MethodDeclaration(
             returnType = objType,
             identifier = fn.Name.String)
@@ -70,19 +90,19 @@ module Main =
             .WithParameterList(
                 generateParameterList fn.Args)
             .WithExpressionBody(
-                generateExpr fn.Expr fnMap
+                generateExpr fn.Expr
                     |> ArrowExpressionClause)
             .WithSemicolonToken(
                 Token(SyntaxKind.SemicolonToken))
             :> Syntax.MemberDeclarationSyntax
 
-    let generateFunctions fnMap =
+    let generateFunctions fns =
         [|
-            for fn in Map.values fnMap do
-                generateFunction fn fnMap
+            for fn in fns do
+                generateFunction fn
         |]
 
-    let generate (assemblyName : string) fnMap =
+    let generate (assemblyName : string) fns =
 
         let mainMethod =
 
@@ -101,7 +121,7 @@ module Main =
                 .AddBodyStatements(stmt)
 
         let classNode =
-            let members = generateFunctions fnMap
+            let members = generateFunctions fns
             ClassDeclaration($"{assemblyName}Type")
                 .AddMembers(items = members)
                 .AddMembers(mainMethod)
@@ -142,5 +162,6 @@ module Main =
     [<EntryPoint>]
     let main args =
         parse input
+            |> Map.values
             |> generate "fib"
         0
