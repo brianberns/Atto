@@ -25,6 +25,5 @@ module Main =
     [<EntryPoint>]
     let main args =
         parse input
-            |> Map.values
             |> Generator.Program.generate "fib"
         0

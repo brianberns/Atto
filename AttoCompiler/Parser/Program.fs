@@ -8,6 +8,3 @@ module Program =
         spaces
             >>. many Function.parse
             .>> eof
-            |>> Seq.map (fun fn ->
-                fn.Name, fn)
-            |>> Map

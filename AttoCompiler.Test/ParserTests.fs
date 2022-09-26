@@ -20,29 +20,27 @@ type ParserTests() =
         let expected =
             let fib = Identifier "fib"
             let n = Identifier "n"
-            let fn =
-                {
-                    Name = fib
-                    Args = [ n ]
-                    Expr =
-                        If (
-                            Equal (
-                                Name n,
-                                Literal (Num 0.0)),
-                            Literal (Num 1.0),
-                            Operation (
-                                Multiplication,
-                                Name n,
-                                Call (
-                                    fib,
-                                    [|
-                                        Operation (
-                                            Subtraction,
-                                            Name n,
-                                            Literal (Num 1.0))
-                                    |])))
-                }
-            Map [ fn.Name, fn ]
+            [{
+                Name = fib
+                Args = [ n ]
+                Expr =
+                    If (
+                        Equal (
+                            Name n,
+                            Literal (Num 0.0)),
+                        Literal (Num 1.0),
+                        Operation (
+                            Multiplication,
+                            Name n,
+                            Call (
+                                fib,
+                                [|
+                                    Operation (
+                                        Subtraction,
+                                        Name n,
+                                        Literal (Num 1.0))
+                                |])))
+            }]
 
         match runParserOnString Program.parse Map.empty "" input with
             | Success (result, _, _) ->
