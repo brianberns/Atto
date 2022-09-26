@@ -72,10 +72,9 @@ module Main =
         let mainMethod =
 
             let stmt =
-                Block(
-                    ExpressionStatement(
-                        InvocationExpression(
-                            IdentifierName("main"))))
+                ExpressionStatement(
+                    InvocationExpression(
+                        IdentifierName("main")))
 
             MethodDeclaration(
                 returnType = PredefinedType(
