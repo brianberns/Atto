@@ -19,7 +19,7 @@ module Main =
                 * n fib - n 1
 
         fn main is
-            fib 10
+            print fib 10
         """
 
     let parse input =
@@ -97,6 +97,17 @@ module Main =
                     generateExpr pred,
                     generateExpr ifTrue,
                     generateExpr ifFalse)
+            | Print expr ->
+                InvocationExpression(
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            IdentifierName("System"),
+                            IdentifierName("Console")),
+                        IdentifierName("WriteLine")))
+                    .WithArgumentList(
+                        generateArgumentList [| expr |])
 
     and generateArgument expr =
         Argument(generateExpr expr)
@@ -173,6 +184,7 @@ module Main =
                 [|
                     Net60.mscorlib
                     Net60.SystemRuntime
+                    Net60.SystemConsole
                 |]
             let options =
                 CSharpCompilationOptions(OutputKind.ConsoleApplication)

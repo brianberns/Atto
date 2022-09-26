@@ -15,6 +15,7 @@ type Expr =
     | Equal of Expr * Expr
     | Operation of Operator * Expr * Expr
     | If of pred : Expr * ifTrue : Expr * ifFalse : Expr
+    | Print of Expr
 
 module Expr =
 
@@ -67,11 +68,18 @@ module Expr =
             (fun _ pred ifTrue ifFalse ->
                 If (pred, ifTrue, ifFalse))
 
+    let private parsePrint =
+        pipe2
+            (Reserved.skip "print")
+            parseExpr
+            (fun _ expr -> Print expr)
+
     let private parseExprImpl =
         choice [
             parseIf
             parseEqual
             parseLiteral
+            parsePrint
             parseName
             parseOperation
         ]
