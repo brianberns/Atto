@@ -2,7 +2,6 @@ namespace Atto.Generator
 
 open Microsoft.CodeAnalysis
 open Microsoft.VisualStudio.TestTools.UnitTesting
-open FParsec
 
 [<TestClass>]
 type GeneratorTests() =
@@ -44,17 +43,11 @@ namespace fib
 }
             """.Trim()
 
-        let parse input =
-            match runParserOnString Atto.Parser.Program.parse Map.empty "" input with
-                | Success (fnMap, _, _) ->
-                    fnMap
-                | Failure (message, _, _) ->
-                    failwith message
-
-        let actual =
-            let compilationUnit, _ =
-                parse input
-                    |> Program.generateCompilationUnit "fib"
-            compilationUnit.NormalizeWhitespace().ToString()
-
-        Assert.AreEqual<_>(expected, actual)
+        match Atto.Parser.Program.parse input with
+            | Choice1Of2 fns ->
+                let actual =
+                    let compilationUnit, _ =
+                        Program.generateCompilationUnit "fib" fns
+                    compilationUnit.NormalizeWhitespace().ToString()
+                Assert.AreEqual<_>(expected, actual)
+            | Choice2Of2 message -> Assert.Fail(message)

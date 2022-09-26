@@ -15,15 +15,11 @@ module Main =
             print fib 10
         """
 
-    let parse input =
-        match runParserOnString Parser.Program.parse Map.empty "" input with
-            | Success (fnMap, _, _) ->
-                fnMap
-            | Failure (message, _, _) ->
-                failwith message
-
     [<EntryPoint>]
     let main args =
-        parse input
-            |> Generator.Program.generate "fib"
+        match Parser.Program.parse input with
+            | Choice1Of2 fns ->
+                Generator.Program.generate "fib" fns
+            | Choice2Of2 message ->
+                printfn "%s" message
         0

@@ -1,7 +1,6 @@
 namespace Atto.Parser
 
 open Microsoft.VisualStudio.TestTools.UnitTesting
-open FParsec
 
 [<TestClass>]
 type ParserTests() =
@@ -42,7 +41,7 @@ type ParserTests() =
                                 |])))
             }]
 
-        match runParserOnString Program.parse Map.empty "" input with
-            | Success (result, _, _) ->
-                Assert.AreEqual<_>(expected, result)
-            | Failure (message, _, _) -> Assert.Fail(message)
+        match Program.parse input with
+            | Choice1Of2 actual ->
+                Assert.AreEqual<_>(expected, actual)
+            | Choice2Of2 message -> Assert.Fail(message)
