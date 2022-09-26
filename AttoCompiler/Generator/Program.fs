@@ -66,7 +66,7 @@ module Program =
                     :> Syntax.MemberDeclarationSyntax
         |]
 
-    let generate (assemblyName : string) fns =
+    let generateCompilationUnit assemblyName fns =
 
         let classNode =
             let methods = generateFunctions fns
@@ -76,11 +76,19 @@ module Program =
 
         let namespaceNode =
             NamespaceDeclaration(
-                IdentifierName(assemblyName))
+                IdentifierName(assemblyName : string))
                 .AddMembers(classNode)
 
         let compilationUnit =
             CompilationUnit().AddMembers(namespaceNode)
+        let mainTypeName =
+            $"{namespaceNode.Name}.{classNode.Identifier}"
+        compilationUnit, mainTypeName
+
+    let generate assemblyName fns =
+
+        let compilationUnit, mainTypeName =
+            generateCompilationUnit assemblyName fns
         printfn "%A" <| compilationUnit.NormalizeWhitespace()
 
         let compilation =
@@ -91,7 +99,7 @@ module Program =
                 |]
             let options =
                 CSharpCompilationOptions(OutputKind.ConsoleApplication)
-                    .WithMainTypeName($"{namespaceNode.Name}.{classNode.Identifier}")
+                    .WithMainTypeName(mainTypeName)
             CSharpCompilation
                 .Create(assemblyName)
                 .AddSyntaxTrees(compilationUnit.SyntaxTree)
