@@ -52,10 +52,25 @@ module Main =
 
     let rec generateExpr expr : Syntax.ExpressionSyntax =
         match expr with
+            | Literal (Num num) ->
+                LiteralExpression(
+                    SyntaxKind.NumericLiteralExpression,
+                    SyntaxFactory.Literal(num))
+            | Literal (Str str) ->
+                LiteralExpression(
+                    SyntaxKind.StringLiteralExpression,
+                    SyntaxFactory.Literal(str))
+            | Name id ->
+                IdentifierName(id.String)
             | Call (fnName, args) ->
                 InvocationExpression(
                     IdentifierName(fnName.String))
                     .WithArgumentList(generateArgumentList args)
+            | Equal (left, right) ->
+                BinaryExpression(
+                    SyntaxKind.EqualsExpression,
+                    generateExpr left,
+                    generateExpr right)
             | If (pred, ifTrue, ifFalse) ->
                 ConditionalExpression(
                     generateExpr pred,
