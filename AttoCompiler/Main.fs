@@ -29,21 +29,42 @@ module Main =
             | Failure (message, _, _) ->
                 failwith message
 
-    let generateFunction (Identifier fnName) fnMap =
+    let objType =
+        PredefinedType(
+            Token(SyntaxKind.ObjectKeyword))
+
+    let generateParameter (id : Identifier) =
+        Parameter(SyntaxFactory.Identifier(id.String))
+            .WithType(objType)
+
+    let generateParameterList ids =
+        let comma =
+            Token(SyntaxKind.CommaToken)
+                |> SyntaxNodeOrToken.op_Implicit
+        seq {
+            for i, id in Seq.indexed ids do
+                if i > 0 then comma
+                else generateParameter id
+                    |> SyntaxNodeOrToken.op_Implicit
+        }
+            |> SeparatedList
+            |> ParameterList
+
+    let generateFunction fn fnMap =
         MethodDeclaration(
-            returnType = PredefinedType(
-                Token(
-                    SyntaxKind.ObjectKeyword)),
-            identifier = fnName)
+            returnType = objType,
+            identifier = fn.Name.String)
             .AddModifiers(
                 Token(SyntaxKind.StaticKeyword))
+            .WithParameterList(
+                generateParameterList fn.Args)
             .AddBodyStatements()
             :> Syntax.MemberDeclarationSyntax
 
     let generateFunctions fnMap =
         [|
-            for fnName in Map.keys fnMap do
-                generateFunction fnName fnMap
+            for fn in Map.values fnMap do
+                generateFunction fn fnMap
         |]
 
     let generate (assemblyName : string) fnMap =

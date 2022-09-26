@@ -3,6 +3,9 @@
 open FParsec
 
 type Identifier = Identifier of string
+    with
+    member this.String =
+        let (Identifier str) = this in str
 
 module Identifier =
 
