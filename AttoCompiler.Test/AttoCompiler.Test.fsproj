@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="Programs\Fib.at" />
     <Compile Include="ParserTests.fs" />
     <Compile Include="GeneratorTests.fs" />
     <Compile Include="Main.fs" />

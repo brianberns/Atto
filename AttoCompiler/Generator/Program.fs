@@ -89,7 +89,6 @@ module Program =
 
         let compilationUnit, mainTypeName =
             generateCompilationUnit assemblyName fns
-        printfn "%A" <| compilationUnit.NormalizeWhitespace()
 
         let compilation =
             let references : MetadataReference[] =
@@ -106,11 +105,13 @@ module Program =
                 .AddReferences(references)
                 .WithOptions(options)
         let result = compilation.Emit($"{assemblyName}.dll")
-        for diagnostic in result.Diagnostics do
-            printfn "%A" diagnostic
-        if result.Success then printfn "Success"
-
-        System.IO.File.Copy(
-            "App.runtimeconfig.json",
-            $"{assemblyName}.runtimeconfig.json",
-            overwrite = true)
+        if result.Success then
+            System.IO.File.Copy(
+                "App.runtimeconfig.json",
+                $"{assemblyName}.runtimeconfig.json",
+                overwrite = true)
+            Array.empty
+        else
+            result.Diagnostics
+                |> Seq.map string
+                |> Seq.toArray
