@@ -29,74 +29,85 @@ module Function =
             |> SeparatedList
             |> ParameterList
 
-    let rec private generateExpr expr : Syntax.ExpressionSyntax =
-        match expr with
-            | Parser.Literal (Parser.Num num) ->
-                LiteralExpression(
-                    SyntaxKind.NumericLiteralExpression,
-                    Literal(num))
-            | Parser.Literal (Parser.Str str) ->
-                LiteralExpression(
-                    SyntaxKind.StringLiteralExpression,
-                    Literal(str))
-            | Parser.Name id ->
-                IdentifierName(id.String)
-            | Parser.Call (fnName, args) ->
-                InvocationExpression(
-                    IdentifierName(fnName.String))
-                    .WithArgumentList(generateArgumentList args)
-            | Parser.Equal (left, right) ->
-                InvocationExpression(
-                    MemberAccessExpression(
-                        SyntaxKind.SimpleMemberAccessExpression,
-                        MemberAccessExpression(
-                            SyntaxKind.SimpleMemberAccessExpression,
-                            IdentifierName("System"),
-                            IdentifierName("Object")),
-                        IdentifierName("Equals")))
-                    .WithArgumentList(
-                        generateArgumentList [|left; right|])
-            | Parser.Operation (op, left, right) ->
-                let opKind =
-                    match op with
-                        | Parser.Addition -> SyntaxKind.AddExpression
-                        | Parser.Subtraction -> SyntaxKind.SubtractExpression
-                        | Parser.Multiplication -> SyntaxKind.MultiplyExpression
-                let cast node =
-                    CastExpression(
-                        PredefinedType(
-                            Token(SyntaxKind.DoubleKeyword)),
-                        node)
-                BinaryExpression(
-                    opKind,
-                    generateExpr left |> cast,
-                    generateExpr right |> cast)
-            | Parser.If (pred, ifTrue, ifFalse) ->
-                ConditionalExpression(
-                    generateExpr pred,
-                    generateExpr ifTrue,
-                    generateExpr ifFalse)
-            | Parser.Print expr ->
-                InvocationExpression(
-                    IdentifierName("Print"))
-                    .WithArgumentList(
-                        generateArgumentList [| expr |])
+    let private generateLiteral = function
+        | Parser.Num num ->
+            LiteralExpression(
+                SyntaxKind.NumericLiteralExpression,
+                Literal(num))
+        | Parser.Str str ->
+            LiteralExpression(
+                SyntaxKind.StringLiteralExpression,
+                Literal(str))
 
-    and private generateArgument expr =
-        Argument(generateExpr expr)
-
-    and private generateArgumentList exprs =
+    let rec private generateArgumentList exprs =
         let comma =
             Token(SyntaxKind.CommaToken)
                 |> SyntaxNodeOrToken.op_Implicit
         seq {
             for i, expr in Seq.indexed exprs do
                 if i > 0 then comma
-                generateArgument expr
+                Argument(generateExpr expr)
                     |> SyntaxNodeOrToken.op_Implicit
         }
             |> SeparatedList
             |> ArgumentList
+
+    and private generateCall (fnName : Parser.Identifier) args =
+        InvocationExpression(
+            IdentifierName(fnName.String))
+            .WithArgumentList(generateArgumentList args)
+
+    and private geneateEqual left right =
+        InvocationExpression(
+            MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    IdentifierName("System"),
+                    IdentifierName("Object")),
+                IdentifierName("Equals")))
+            .WithArgumentList(
+                generateArgumentList [|left; right|])
+
+    and private generateOperation op left right =
+        let opKind =
+            match op with
+                | Parser.Addition -> SyntaxKind.AddExpression
+                | Parser.Subtraction -> SyntaxKind.SubtractExpression
+                | Parser.Multiplication -> SyntaxKind.MultiplyExpression
+        let cast node =
+            CastExpression(
+                PredefinedType(
+                    Token(SyntaxKind.DoubleKeyword)),
+                node)
+        BinaryExpression(
+            opKind,
+            generateExpr left |> cast,
+            generateExpr right |> cast)
+
+    and private generateIf pred ifTrue ifFalse =
+        ConditionalExpression(
+            generateExpr pred,
+            generateExpr ifTrue,
+            generateExpr ifFalse)
+
+    and private generatePrint expr =
+        InvocationExpression(
+            IdentifierName("Print"))
+            .WithArgumentList(
+                generateArgumentList [| expr |])
+
+    and private generateExpr expr : Syntax.ExpressionSyntax =
+        match expr with
+            | Parser.Literal literal -> generateLiteral literal
+            | Parser.Name id -> IdentifierName(id.String)
+            | Parser.Call (fnName, args) -> generateCall fnName args
+            | Parser.Equal (left, right) -> geneateEqual left right
+            | Parser.Operation (op, left, right) ->
+                generateOperation op left right
+            | Parser.If (pred, ifTrue, ifFalse) ->
+                generateIf pred ifTrue ifFalse
+            | Parser.Print expr -> generatePrint expr
 
     let generate (fn : Parser.Function) =
         MethodDeclaration(
