@@ -71,6 +71,16 @@ module Main =
                     SyntaxKind.EqualsExpression,
                     generateExpr left,
                     generateExpr right)
+            | Operation (op, left, right) ->
+                let opKind =
+                    match op with
+                        | Addition -> SyntaxKind.AddExpression
+                        | Subtraction -> SyntaxKind.SubtractExpression
+                        | Multiplication -> SyntaxKind.MultiplyExpression
+                BinaryExpression(
+                    opKind,
+                    generateExpr left,
+                    generateExpr right)
             | If (pred, ifTrue, ifFalse) ->
                 ConditionalExpression(
                     generateExpr pred,
