@@ -16,17 +16,21 @@ module Function =
         Parameter(Identifier(id.String))
             .WithType(objType)
 
-    let private generateParameterList ids =
+    let private generateSeparatedList nodes =
         let comma =
-            Token(SyntaxKind.CommaToken)
+            SyntaxKind.CommaToken
+                |> Token
                 |> SyntaxNodeOrToken.op_Implicit
         seq {
-            for i, id in Seq.indexed ids do
+            for i, (node : #SyntaxNode) in Seq.indexed nodes do
                 if i > 0 then comma
-                generateParameter id
-                    |> SyntaxNodeOrToken.op_Implicit
-        }
-            |> SeparatedList
+                SyntaxNodeOrToken.op_Implicit node
+        } |> SeparatedList
+
+    let private generateParameterList ids =
+        ids
+            |> Seq.map generateParameter
+            |> generateSeparatedList
             |> ParameterList
 
     let private generateLiteral = function
@@ -40,16 +44,9 @@ module Function =
                 Literal(str))
 
     let rec private generateArgumentList exprs =
-        let comma =
-            Token(SyntaxKind.CommaToken)
-                |> SyntaxNodeOrToken.op_Implicit
-        seq {
-            for i, expr in Seq.indexed exprs do
-                if i > 0 then comma
-                Argument(generateExpr expr)
-                    |> SyntaxNodeOrToken.op_Implicit
-        }
-            |> SeparatedList
+        exprs
+            |> Seq.map (generateExpr >> Argument)
+            |> generateSeparatedList
             |> ArgumentList
 
     and private generateCall (fnName : Parser.Identifier) args =
