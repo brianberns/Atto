@@ -86,7 +86,6 @@ module Program =
         let compilation =
             let references : MetadataReference[] =
                 [|
-                    Net60.mscorlib
                     Net60.SystemRuntime
                     Net60.SystemConsole
                 |]
